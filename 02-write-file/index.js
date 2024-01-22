@@ -1,27 +1,27 @@
-const fs = require("fs");
-const path = require("path");
-const { stdin: input, stdout: output } = require("node:process");
-const readline = require("node:readline");
+const { createWriteStream } = require("node:fs");
+const { join } = require("node:path");
+const { stdin, stdout } = require("node:process");
+const { createInterface } = require("node:readline");
 
-const output_file_path = path.join(__dirname, "text.txt");
-const write_stream = fs.createWriteStream(output_file_path, "utf8");
-const rl = readline.createInterface({ input, output });
+const output_file_path = join(__dirname, "text.txt");
+const write_stream = createWriteStream(output_file_path, "utf8");
+const readline = createInterface(stdin, stdout);
 
-output.write("Please, write your text below: \n");
+stdout.write("Please, write your text below: \n");
 
-rl.on("line", function(str) {
-  if (str !== "exit") {
-    write_stream.write(str + "\n");
+readline.on("line", function(line) {
+  if (line !== "exit") {
+    write_stream.write(line + "\n");
   } else {
-    rl.close();
+    readline.close();
   }  
 }); 
 
-rl.on("SIGINT", function() {
-  rl.close()
+readline.on("SIGINT", function() {
+  readline.close()
 });
 
-rl.on("close", function() {
-  output.write("Thank you! See you later!");
+readline.on("close", function() {
+  stdout.write("Thank you! See you later!");
   process.exit();
 });
