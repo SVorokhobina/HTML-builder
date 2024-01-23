@@ -1,9 +1,6 @@
-const { join } = require("node:path");
-const { copyFile, mkdir, readdir, rm } = require("node:fs/promises");
-
-
-
-
+const { join, extname } = require("node:path");
+const { copyFile, mkdir, readdir, rm, writeFile } = require("node:fs/promises");
+const { createReadStream, createWriteStream } = require("node:fs");
 
 async function createFolder(path) {
   await mkdir(path);
@@ -24,6 +21,11 @@ async function clearFolder(path) {
   //}
 }
 
+async function clearFile(path) {
+  await writeFile(path, "", "utf8");
+  console.log("clearFile");
+}
+
 async function copyFiles(source_path, copy_path) {
   const files = await readdir(source_path, {withFileTypes: true});
   for (const file of files) {
@@ -41,6 +43,15 @@ async function copyFiles(source_path, copy_path) {
   //console.log("copyFiles");
 }
 
+async function mergeFileContent(source, output) {
+  const read_stream = createReadStream(source, "utf8");
+  const write_stream = createWriteStream(output, {flags: "a"}, "utf8");
+  read_stream.pipe(write_stream);
+  console.log("mergeFileContent");
+}
+
+/*---------- Assets ----------*/
+
 async function getAssets() {
   const assets_folder = join(__dirname, "project-dist", "assets");
   const source_folder = join(__dirname, "assets");
@@ -56,6 +67,39 @@ async function getAssets() {
   }
 }
 
+/*---------- Styles ----------*/
+
+async function getStylesheet() {
+  const source_folder = join(__dirname, "styles");
+  const project_folder = join(__dirname, "project-dist");
+  const output_file = join(__dirname, "project-dist", "style.css");
+
+  const project_files = await readdir(project_folder, {withFileTypes: true});
+  for (const file of project_files) {
+    if (file.isFile() === true && file.name === "style.css") {
+      await clearFile(output_file);
+    } else {
+      continue;
+    }
+  };
+  const files = await readdir(source_folder, {withFileTypes: true});
+  for (const file of files) {
+    const file_path = join(source_folder, file.name);
+    const extension = extname(file_path);
+    if (file.isFile() === true && extension === ".css") {
+      await mergeFileContent(file_path, output_file);
+      console.log(`getStylesheet: merge file ${file_path}`);
+    }
+  };
+}
+
+
+
+
+
+
+
+
 async function buildProject() {
   // create the root project folder
   const project_folder = join(__dirname, "project-dist");
@@ -66,19 +110,9 @@ async function buildProject() {
     console.log("buildProject catch");
   } finally {
     console.log("buildProject finally");
-    getAssets();
+    await getAssets();
+    await getStylesheet();
   }
 }
 
 buildProject();
-
-/*createFolder(project_folder)
-  .then(() => {
-    console.log("Well done, the folder is created");
-  })
-  .catch(() => {
-    console.log("The folder already exists");
-  })
-  .finally(() => {
-    console.log("Works anyway");
-  });*/
