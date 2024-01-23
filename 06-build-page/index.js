@@ -131,7 +131,7 @@ async function buildProject() {
   try {
     await createFolder(project_folder);
   } catch {
-    console.log("All good, 'project-dist' folder already exists, nothing needs to be done.");
+    console.log("");
   } finally {
     await getAssets();
     await getStylesheet();
